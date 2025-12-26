@@ -2,8 +2,24 @@ package io.eddie.batchexp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 
 @SpringBootApplication
+@ComponentScan(
+        excludeFilters = {
+                // C01
+                @ComponentScan.Filter(
+                        type = FilterType.REGEX,
+                        pattern = "io\\.eddie\\.batchexp\\.C01\\..*"
+                ),
+                // C02
+                @ComponentScan.Filter(
+                        type = FilterType.REGEX,
+                        pattern = "io\\.eddie\\.batchexp\\.C02\\..*"
+                )
+        }
+)
 public class BatchExpApplication {
 
     public static void main(String[] args) {
