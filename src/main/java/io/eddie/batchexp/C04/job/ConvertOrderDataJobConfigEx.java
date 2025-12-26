@@ -10,7 +10,7 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.FlatFileParseException;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.json.JacksonJsonObjectMarshaller;
 import org.springframework.batch.item.json.builder.JsonFileItemWriterBuilder;
@@ -35,10 +35,19 @@ public class ConvertOrderDataJobConfigEx {
     }
 
     @Bean
+    public OrderExceptionListener orderExceptionListener() {
+        return new OrderExceptionListener();
+    }
+
+    @Bean
     public Step aggregateOrderDataStepEx() {
         return new StepBuilder("aggregateOrderDataStepEx", jobRepository)
 
                 .<OrderDataEx, OrderDataEx>chunk(15, txManager)
+
+                .faultTolerant()
+                .skip(FlatFileParseException.class)
+                .skipLimit(Integer.MAX_VALUE)
 
                 .reader(
                         new FlatFileItemReaderBuilder<OrderDataEx>()
@@ -62,6 +71,8 @@ public class ConvertOrderDataJobConfigEx {
                                 )
                                 .build()
                 )
+
+                .listener(orderExceptionListener())
 
                 .build();
 
