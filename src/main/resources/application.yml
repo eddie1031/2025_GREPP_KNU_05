@@ -7,8 +7,8 @@ spring:
     password:
 
   batch:
-     job:
-       enabled: false
+#     job:
+#       enabled: false
 
      jdbc:
        initialize-schema: always
