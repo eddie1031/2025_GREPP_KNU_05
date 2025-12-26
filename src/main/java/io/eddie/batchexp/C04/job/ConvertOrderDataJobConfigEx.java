@@ -1,15 +1,16 @@
-package io.eddie.batchexp.C03.job;
+package io.eddie.batchexp.C04.job;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.eddie.batchexp.C03.mapper.TextOrderDataMapper;
-import io.eddie.batchexp.C03.model.OrderData;
+import io.eddie.batchexp.C04.mapper.TextOrderDataMapperEx;
+import io.eddie.batchexp.C04.model.OrderDataEx;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.json.JacksonJsonObjectMarshaller;
 import org.springframework.batch.item.json.builder.JsonFileItemWriterBuilder;
@@ -21,42 +22,36 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @RequiredArgsConstructor
-public class ConvertOrderDataJobConfig {
+public class ConvertOrderDataJobConfigEx {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager txManager;
 
     @Bean
-    public Job orderDataConvertJob() {
-        return new JobBuilder("orderDataConvertJob", jobRepository)
-                .start(aggregateOrderDataStop())
+    public Job orderDataConvertJobEx() {
+        return new JobBuilder("orderDataConvertJobEx", jobRepository)
+                .start(aggregateOrderDataStepEx())
                 .build();
     }
 
     @Bean
-    public Step aggregateOrderDataStop() {
-        // Chunk-oriented Step
-        // Reader
-        // Processor [Optional]
-        // Writer
-        return new StepBuilder("aggregateOrderDataStop", jobRepository)
+    public Step aggregateOrderDataStepEx() {
+        return new StepBuilder("aggregateOrderDataStepEx", jobRepository)
 
-                .<OrderData, OrderData>chunk(1 ,txManager)
+                .<OrderDataEx, OrderDataEx>chunk(15, txManager)
 
                 .reader(
-                    new FlatFileItemReaderBuilder<OrderData>()
-                            .name("textOrderDataReader")
-                            .resource(new ClassPathResource("/in/order_data.txt"))
-                            .lineMapper(new TextOrderDataMapper())
-                            .build()
+                        new FlatFileItemReaderBuilder<OrderDataEx>()
+                                .name("textOrderDataReaderEx")
+                                .resource(new ClassPathResource("/in/order_data_ng.txt"))
+                                .lineMapper(new TextOrderDataMapperEx())
+                                .build()
                 )
 
-//                .processor()
-
                 .writer(
-                        new JsonFileItemWriterBuilder<>()
-                                .name("orderJsonDataWriter")
-                                .resource(new FileSystemResource("src/main/resources/out/order_data.json"))
+                        new JsonFileItemWriterBuilder<OrderDataEx>()
+                                .name("orderJsonDataWriterEx")
+                                .resource(new FileSystemResource("src/main/resources/out/order_data_ng.json"))
                                 .jsonObjectMarshaller(
                                         new JacksonJsonObjectMarshaller<>() {{
                                             setObjectMapper(
@@ -69,6 +64,7 @@ public class ConvertOrderDataJobConfig {
                 )
 
                 .build();
+
     }
 
 }
